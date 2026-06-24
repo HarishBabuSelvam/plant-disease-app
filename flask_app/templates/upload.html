@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Upload Leaf Image{% endblock %}
+
+{% block content %}
+
+<div class="page-header">
+  <h1>📤 Analyze Your Plant</h1>
+  <p>Upload a clear photo of the affected leaf for instant AI diagnosis</p>
+</div>
+
+<div class="upload-container">
+
+  <!-- Tips -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-header" style="background:#f0f7f0;">
+      💡 Tips for Best Results
+    </div>
+    <div class="card-body">
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.5rem;">
+        {% for tip in [
+          ('✅', 'Good lighting — natural daylight is best'),
+          ('✅', 'Focus on affected leaf areas'),
+          ('✅', 'Single leaf fills most of the frame'),
+          ('✅', 'JPG, PNG or WEBP format'),
+          ('❌', 'Avoid blurry or dark photos'),
+          ('❌', 'Avoid photos with multiple plants')
+        ] %}
+        <div style="font-size:0.9rem; color:#444;">
+          {{ tip[0] }} {{ tip[1] }}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Form -->
+  <form id="upload-form" action="{{ url_for('api.predict') }}"
+        method="POST" enctype="multipart/form-data">
+
+    <div class="upload-area" id="upload-area">
+      <span class="upload-icon">🍃</span>
+      <h3>Drop your leaf image here</h3>
+      <p>or click to browse from your device</p>
+      <input type="file" id="file-input" name="file"
+             accept=".jpg,.jpeg,.png,.webp">
+      <button type="button" class="btn btn-primary"
+              onclick="document.getElementById('file-input').click()">
+        📂 Browse Image
+      </button>
+    </div>
+
+    <!-- Preview -->
+    <div class="preview-container" id="preview-container">
+      <img id="preview-img" src="" alt="Preview">
+      <div class="preview-info" id="preview-info"></div>
+    </div>
+
+    <!-- Submit -->
+    <div style="text-align:center; margin-top:1.5rem;">
+      <button type="submit" id="submit-btn" class="btn btn-primary"
+              disabled style="opacity:0.5; font-size:1.1rem;
+              padding:1rem 3rem;">
+        🔬 Analyze Plant
+      </button>
+    </div>
+
+  </form>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text">🤖 AI is analyzing your plant...</div>
+  <div style="color:rgba(255,255,255,0.7); font-size:0.9rem;">
+    This takes about 2-3 seconds
+  </div>
+</div>
+
+{% endblock %}
