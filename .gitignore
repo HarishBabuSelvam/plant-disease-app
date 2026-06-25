@@ -1,10 +1,33 @@
+# Virtual environment
 venv/
+
+# Python cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+
+# Dataset (too large)
 dataset/
-model/*.h5
-flask_app/static/uploads/*
-flask_app/database/*.db
-.vscode/
-.DS_Store
+
+# Environment variables
 .env
+
+# VS Code
+.vscode/
+
+# Mac files
+.DS_Store
+
+# Database (regenerated on deploy)
+flask_app/database/*.db
+
+# Uploaded images (user data)
+flask_app/static/uploads/*
+!flask_app/static/uploads/.gitkeep
+
+# Training artifacts
+model/training_history.png
+
+# Test cache
+.pytest_cache/
