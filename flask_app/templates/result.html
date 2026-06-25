@@ -3,178 +3,210 @@
 
 {% block content %}
 
-{% set info = prediction %}
-
 <div class="result-container">
 
-  <!-- Header -->
-  <div class="result-header {{ 'healthy' if info.is_healthy else 'diseased' }}">
+  <!-- ── HEADER ─────────────────────────── -->
+  <div class="result-header
+       {{ 'healthy' if prediction.is_healthy else 'diseased' }}">
     <div style="font-size:3.5rem; margin-bottom:0.75rem;">
-      {{ '✅' if info.is_healthy else '⚠️' }}
+      {{ '✅' if prediction.is_healthy else '⚠️' }}
     </div>
-    <h1>{{ info.plant_name }} — {{ info.disease_name }}</h1>
-    <p>{{ 'Your plant appears to be healthy!' if info.is_healthy else 'Disease detected — see treatment details below.' }}</p>
+    <h1>{{ prediction.plant_name }} — {{ prediction.disease_name }}</h1>
+    <p>
+      {% if prediction.is_healthy %}
+        Your plant appears to be perfectly healthy!
+      {% else %}
+        Disease detected — follow the treatment plan below.
+      {% endif %}
+    </p>
     <div class="confidence-badge">
-      🎯 {{ info.confidence }}% Confidence
+      🎯 {{ prediction.confidence }}% Confidence
     </div>
   </div>
 
-  <!-- Quick Stats Row -->
-  <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-              gap:1rem; margin-bottom:1.5rem;">
-    <div class="stat-card {{ 'green' if info.is_healthy else 'red' }}">
-      <span class="stat-icon">{{ '🌿' if info.is_healthy else '🦠' }}</span>
+  <!-- ── QUICK STATS ────────────────────── -->
+  <div class="stats-grid" style="margin:1.5rem 0;">
+    <div class="stat-card {{ 'green' if prediction.is_healthy else 'red' }}">
+      <span class="stat-icon">
+        {{ '🌿' if prediction.is_healthy else '🦠' }}
+      </span>
       <div style="font-weight:700; color:var(--primary-dark);">
-        {{ 'Healthy' if info.is_healthy else info.severity }}
+        {{ 'Healthy' if prediction.is_healthy
+           else prediction.severity }}
       </div>
       <div class="stat-label">Status</div>
     </div>
     <div class="stat-card yellow">
       <span class="stat-icon">⚡</span>
       <div style="font-weight:700; color:var(--primary-dark);">
-        {{ info.spread_risk }}
+        {{ prediction.spread_risk }}
       </div>
       <div class="stat-label">Spread Risk</div>
     </div>
     <div class="stat-card blue">
       <span class="stat-icon">⏱️</span>
       <div style="font-weight:700; color:var(--primary-dark);
-                  font-size:0.95rem;">
-        {{ info.treatment_time }}
+                  font-size:0.9rem;">
+        {{ prediction.treatment_time }}
       </div>
       <div class="stat-label">Treatment Time</div>
     </div>
     <div class="stat-card green">
-      <span class="stat-icon">📊</span>
+      <span class="stat-icon">🎯</span>
       <div style="font-weight:700; color:var(--primary-dark);">
-        {{ info.confidence }}%
+        {{ prediction.confidence }}%
       </div>
       <div class="stat-label">AI Confidence</div>
     </div>
   </div>
 
-  <!-- Recovery Bar -->
-  {% if not info.is_healthy %}
-  <div class="card recovery-section">
+  <!-- ── RECOVERY BAR ───────────────────── -->
+  {% if not prediction.is_healthy %}
+  <div class="card" style="margin-bottom:1.5rem;">
     <div class="card-header">📈 Recovery Probability</div>
     <div class="card-body">
       <div style="display:flex; justify-content:space-between;
-                  align-items:center; margin-bottom:0.5rem;">
-        <span style="font-weight:600;">Recovery Chance</span>
-        <span style="font-size:1.4rem; font-weight:800;
-                     color:{{ 'var(--success)' if info.recovery_chance >= 80
-                     else ('var(--warning)' if info.recovery_chance >= 60
-                     else 'var(--danger)') }};">
-          {{ info.recovery_chance }}%
+                  align-items:center; margin-bottom:0.75rem;">
+        <span style="font-weight:600; font-size:1.05rem;">
+          Chance of Recovery
+        </span>
+        <span style="font-size:1.6rem; font-weight:800;
+          color:{{ recovery_color }};">
+          {{ prediction.recovery_chance }}%
         </span>
       </div>
       <div class="recovery-bar-container">
         <div class="recovery-bar" id="recovery-bar"
-             data-value="{{ info.recovery_chance }}"
-             style="width:0%;
-                    background:{{ 'var(--success)' if info.recovery_chance >= 80
-                    else ('var(--warning)' if info.recovery_chance >= 60
-                    else 'var(--danger)') }};">
+             data-value="{{ prediction.recovery_chance }}"
+             style="width:0%; background:{{ recovery_color }};">
         </div>
       </div>
+      <p style="margin-top:0.75rem; color:#666; font-size:0.95rem;">
+        {{ disease_info.recovery_message }}
+      </p>
     </div>
   </div>
   {% endif %}
 
-  <!-- Main Grid -->
+  <!-- ── IMAGE + CAUSE ──────────────────── -->
   <div class="result-grid">
 
-    <!-- Uploaded Image -->
     <div class="card result-image-card">
       <div class="card-header">🖼️ Uploaded Image</div>
       <div class="card-body" style="padding:0.75rem;">
-        <img src="{{ url_for('static', filename='uploads/' + info.filename) }}"
-             alt="Uploaded leaf">
-        <p style="font-size:0.8rem; color:#999; margin-top:0.5rem;
-                  text-align:center;">
-          {{ info.created_at }}
+        <img src="{{ url_for('static',
+             filename='uploads/' + prediction.filename) }}"
+             alt="Uploaded leaf image">
+        <p style="font-size:0.8rem; color:#999;
+                  margin-top:0.5rem; text-align:center;">
+          Analyzed on {{ prediction.created_at }}
         </p>
       </div>
     </div>
 
-   <!-- Cause -->
     <div class="card">
       <div class="card-header">🔬 Cause & Description</div>
       <div class="card-body">
-        <p style="color:#444; line-height:1.7;">
+        <p style="color:#444; line-height:1.8; font-size:0.98rem;">
           {{ disease_info.cause }}
         </p>
-      </div>
-    </div>
-
-  </div>
-
-  <!-- Symptoms & Treatment Grid -->
-  <div class="result-grid" style="margin-top:1.5rem;">
-
-    <!-- Symptoms -->
-    <div class="card">
-      <div class="card-header">🔍 Symptoms</div>
-      <div class="card-body">
-        <ul class="info-list">
-          {% for s in disease_info.symptoms %}
-          <li><span>🔸</span> {{ s }}</li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
-
-    <!-- Treatment -->
-    <div class="card">
-      <div class="card-header">💊 Treatment Steps</div>
-      <div class="card-body">
-        <ul class="info-list">
-          {% for t in disease_info.treatment %}
-          <li><span>✅</span> {{ t }}</li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
-
-    <!-- Prevention -->
-    <div class="card">
-      <div class="card-header">🛡️ Prevention Tips</div>
-      <div class="card-body">
-        <ul class="info-list">
-          {% for p in disease_info.prevention %}
-          <li><span>💡</span> {{ p }}</li>
-          {% endfor %}
-        </ul>
-      </div>
-    </div>
-
-    <!-- Recovery Message -->
-    <div class="card">
-      <div class="card-header">💬 Expert Advice</div>
-      <div class="card-body">
-        <p style="color:#444; line-height:1.7; font-size:1.05rem;">
-          {{ disease_info.recovery_message }}
-        </p>
-        <div style="margin-top:1rem;">
-          <span class="badge badge-{{ 'success' if disease_info.severity == 'None'
-                else ('warning' if disease_info.severity == 'Medium'
-                else 'danger') }}">
-            ⚠️ Severity: {{ disease_info.severity }}
+        <div style="margin-top:1.25rem; display:flex;
+                    gap:0.5rem; flex-wrap:wrap;">
+          <span class="badge
+            {{ 'badge-success' if prediction.severity == 'None'
+               else ('badge-warning' if prediction.severity == 'Medium'
+               else 'badge-danger') }}">
+            ⚠️ Severity: {{ prediction.severity }}
           </span>
-          &nbsp;
           <span class="badge badge-info">
-            📡 Spread Risk: {{ disease_info.spread_risk }}
+            📡 Spread: {{ prediction.spread_risk }}
           </span>
         </div>
       </div>
     </div>
 
   </div>
-  <!-- Action Buttons -->
+
+  <!-- ── SYMPTOMS + TREATMENT ───────────── -->
+  <div class="result-grid" style="margin-top:1.5rem;">
+
+    <div class="card">
+      <div class="card-header">🔍 Symptoms to Look For</div>
+      <div class="card-body">
+        <ul class="info-list">
+          {% for symptom in disease_info.symptoms %}
+          <li>
+            <span style="color:#e74c3c;">🔸</span>
+            {{ symptom }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">💊 Treatment Steps</div>
+      <div class="card-body">
+        <ul class="info-list">
+          {% for step in disease_info.treatment %}
+          <li>
+            <span style="color:#27ae60;">✅</span>
+            {{ step }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── PREVENTION + ADVICE ────────────── -->
+  <div class="result-grid" style="margin-top:1.5rem;">
+
+    <div class="card">
+      <div class="card-header">🛡️ Prevention Tips</div>
+      <div class="card-body">
+        <ul class="info-list">
+          {% for tip in disease_info.prevention %}
+          <li>
+            <span style="color:#3498db;">💡</span>
+            {{ tip }}
+          </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">💬 Expert Advice</div>
+      <div class="card-body">
+        <p style="color:#444; line-height:1.8;
+                  font-size:1rem; margin-bottom:1rem;">
+          {{ disease_info.recovery_message }}
+        </p>
+        {% if not prediction.is_healthy %}
+        <div style="background:#fff3cd; border-radius:8px;
+                    padding:1rem; border-left:4px solid #ffc107;">
+          <strong>⏰ Act within:</strong>
+          {{ prediction.treatment_time }}
+        </div>
+        {% else %}
+        <div style="background:#d4edda; border-radius:8px;
+                    padding:1rem; border-left:4px solid #28a745;">
+          <strong>🌱 Keep it up!</strong>
+          Continue your current care routine.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── ACTION BUTTONS ─────────────────── -->
   <div style="display:flex; gap:1rem; justify-content:center;
-              flex-wrap:wrap; margin:2rem 0;">
+              flex-wrap:wrap; margin:2.5rem 0 1rem;">
     <a href="{{ url_for('main.upload') }}" class="btn btn-primary">
-      📤 Analyze Another
+      📤 Analyze Another Plant
     </a>
     <a href="{{ url_for('main.history') }}" class="btn btn-white">
       📋 View History
@@ -190,12 +222,15 @@
 
 {% block scripts %}
 <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    // Animate recovery bar
-    setTimeout(() => {
-      const bar = document.getElementById('recovery-bar');
-      if (bar) bar.style.width = bar.getAttribute('data-value') + '%';
-    }, 400);
-  });
+document.addEventListener('DOMContentLoaded', () => {
+  // Animate recovery bar
+  setTimeout(() => {
+    const bar = document.getElementById('recovery-bar');
+    if (bar) {
+      bar.style.width = bar.getAttribute('data-value') + '%';
+      bar.style.transition = 'width 1.5s ease';
+    }
+  }, 400);
+});
 </script>
 {% endblock %}

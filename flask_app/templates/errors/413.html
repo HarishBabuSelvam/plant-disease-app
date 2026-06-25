@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}File Too Large{% endblock %}
+
+{% block content %}
+<div style="text-align:center; padding:5rem 2rem;">
+
+  <div style="font-size:6rem; margin-bottom:1rem;">📦</div>
+
+  <h1 style="font-size:5rem; font-weight:900;
+             color:var(--warning); margin-bottom:0.5rem;">
+    413
+  </h1>
+
+  <h2 style="font-size:1.8rem; color:#444;
+             margin-bottom:1rem;">
+    File Too Large!
+  </h2>
+
+  <p style="color:#666; font-size:1.1rem;
+            max-width:500px; margin:0 auto 2rem;">
+    Your file exceeds the maximum size of
+    <strong>10MB</strong>.
+    Please compress your image and try again.
+  </p>
+
+  <div style="background:#d1ecf1; border-radius:12px;
+              padding:1.5rem; max-width:400px;
+              margin:0 auto 2rem;
+              border-left:4px solid #17a2b8;">
+    <strong>📏 File size guidelines:</strong>
+    <ul style="text-align:left; margin-top:0.75rem;
+               color:#444; line-height:2;">
+      <li>Maximum: <strong>10MB</strong></li>
+      <li>Recommended: Under 2MB</li>
+      <li>Formats: JPG, PNG, WEBP</li>
+    </ul>
+  </div>
+
+  <a href="/upload" class="btn btn-primary">
+    📤 Try Again
+  </a>
+
+</div>
+{% endblock %}

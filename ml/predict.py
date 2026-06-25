@@ -2,12 +2,6 @@
 # ============================================
 # PLANT DISEASE PREDICTION PIPELINE
 # ============================================
-# This module handles everything needed to:
-# 1. Load a trained model
-# 2. Preprocess any input image
-# 3. Run prediction
-# 4. Return disease name + confidence
-# ============================================
 
 import os
 import json
@@ -16,28 +10,20 @@ import cv2
 from PIL import Image
 import tensorflow as tf
 
-# ── CONFIGURATION ───────────────────────────
 MODEL_PATH  = "model/plant_disease_model.h5"
 LABELS_PATH = "model/class_labels.json"
 IMAGE_SIZE  = 224
-# ────────────────────────────────────────────
 
 
 class PlantDiseasePredictor:
     """
-    A class that handles all prediction logic.
-    
-    Why a class? Because we load the model ONCE
-    and reuse it for every prediction. Loading a
-    model takes ~3 seconds. If we loaded it every
-    time someone uploads an image, the app would
-    be very slow!
+    Handles all prediction logic.
+    Model is loaded ONCE and reused for every prediction.
     """
 
     def __init__(self):
-        """Initialize: load model and labels once"""
-        self.model = None
-        self.labels = None
+        self.model     = None
+        self.labels    = None
         self.is_loaded = False
         self._load_model()
 
@@ -45,150 +31,106 @@ class PlantDiseasePredictor:
         """Load the trained model and class labels"""
         print("🔄 Loading plant disease model...")
 
-        # Check model file exists
         if not os.path.exists(MODEL_PATH):
             raise FileNotFoundError(
                 f"Model not found: {MODEL_PATH}\n"
                 f"Please run ml/train.py first!"
             )
 
-        # Check labels file exists
         if not os.path.exists(LABELS_PATH):
             raise FileNotFoundError(
-                f"Labels not found: {LABELS_PATH}\n"
-                f"Please run save_labels.py first!"
+                f"Labels not found: {LABELS_PATH}"
             )
 
-        # Load the trained model
-        self.model = tf.keras.models.load_model(MODEL_PATH)
+        self.model  = tf.keras.models.load_model(MODEL_PATH)
 
-        # Load class labels
         with open(LABELS_PATH, "r") as f:
             self.labels = json.load(f)
 
         self.is_loaded = True
-        print(f"✅ Model loaded successfully!")
+        print(f"✅ Model loaded!")
         print(f"   Classes: {len(self.labels)}")
-        print(f"   Input shape: {self.model.input_shape}")
+        print(f"   Input:   {self.model.input_shape}")
 
     def preprocess_image(self, image_input):
         """
         Preprocess image for model prediction.
-        
-        Accepts:
-        - File path (string): "path/to/image.jpg"
-        - PIL Image object
-        - NumPy array
-        
-        Returns:
-        - Preprocessed numpy array ready for model
+        Accepts: file path string, PIL Image, or numpy array
         """
 
-        # ── HANDLE DIFFERENT INPUT TYPES ────────
         if isinstance(image_input, str):
-            # Input is a file path
             if not os.path.exists(image_input):
-                raise FileNotFoundError(f"Image not found: {image_input}")
-
-            # Read with OpenCV
+                raise FileNotFoundError(
+                    f"Image not found: {image_input}"
+                )
             img = cv2.imread(image_input)
             if img is None:
-                raise ValueError(f"Could not read image: {image_input}")
-
-            # OpenCV reads as BGR, convert to RGB
-            # (Models trained on RGB, OpenCV uses BGR)
+                raise ValueError(
+                    f"Could not read image: {image_input}"
+                )
             img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
         elif isinstance(image_input, Image.Image):
-            # Input is a PIL Image
             img = np.array(image_input.convert('RGB'))
 
         elif isinstance(image_input, np.ndarray):
-            # Input is already a numpy array
             img = image_input
             if len(img.shape) == 2:
-                # Grayscale → convert to RGB
                 img = cv2.cvtColor(img, cv2.COLOR_GRAY2RGB)
-
         else:
-            raise TypeError(f"Unsupported image type: {type(image_input)}")
+            raise TypeError(
+                f"Unsupported type: {type(image_input)}"
+            )
 
-        # ── RESIZE ──────────────────────────────
-        # Resize to exactly 224×224 (model requirement)
+        # Resize to 224x224
         img = cv2.resize(img, (IMAGE_SIZE, IMAGE_SIZE))
 
-        # ── NORMALIZE ───────────────────────────
-        # Convert pixel values from 0-255 to 0.0-1.0
+        # Normalize 0-255 → 0.0-1.0
         img = img.astype(np.float32) / 255.0
 
-        # ── ADD BATCH DIMENSION ─────────────────
-        # Model expects shape: (batch_size, 224, 224, 3)
-        # Single image shape:  (224, 224, 3)
-        # After expand_dims:   (1, 224, 224, 3)
+        # Add batch dimension (1, 224, 224, 3)
         img = np.expand_dims(img, axis=0)
 
         return img
 
     def predict(self, image_input):
         """
-        Main prediction function.
-        
-        Args:
-            image_input: file path, PIL image, or numpy array
-            
-        Returns:
-            dict with prediction results:
-            {
-                'class_index': 6,
-                'class_name': 'Tomato_Early_blight',
-                'confidence': 94.3,
-                'top3': [
-                    {'class': 'Tomato_Early_blight', 'confidence': 94.3},
-                    {'class': 'Tomato_Late_blight',  'confidence': 3.2},
-                    {'class': 'Tomato_Leaf_Mold',    'confidence': 1.1}
-                ],
-                'is_healthy': False,
-                'plant_name': 'Tomato',
-                'disease_name': 'Early Blight'
-            }
+        Run prediction on an image.
+
+        Returns dict with:
+        - class_name, confidence, top3
+        - is_healthy, plant_name, disease_name
         """
         if not self.is_loaded:
             raise RuntimeError("Model not loaded!")
 
-        # Step 1: Preprocess the image
+        # Preprocess
         processed = self.preprocess_image(image_input)
 
-        # Step 2: Run model prediction
-        # Returns array of shape (1, 15) with probabilities
+        # Predict
         predictions = self.model.predict(processed, verbose=0)
+        probs       = predictions[0]
 
-        # Step 3: Get the probabilities for this image
-        # predictions[0] removes the batch dimension
-        probs = predictions[0]
-
-        # Step 4: Find the winning class
+        # Get winner
         class_index = int(np.argmax(probs))
         confidence  = float(probs[class_index]) * 100
+        class_name  = self.labels[str(class_index)]
 
-        # Step 5: Get class name from labels
-        class_name = self.labels[str(class_index)]
-
-        # Step 6: Get top 3 predictions
+        # Top 3
         top3_indices = np.argsort(probs)[::-1][:3]
         top3 = [
             {
-                'class': self.labels[str(i)],
+                'class':      self.labels[str(i)],
                 'confidence': round(float(probs[i]) * 100, 2)
             }
             for i in top3_indices
         ]
 
-        # Step 7: Parse plant name and disease name
-        # Class names look like: "Tomato_Early_blight"
-        # or "Tomato__Tomato_mosaic_virus"
-        plant_name, disease_name = self._parse_class_name(class_name)
+        # Parse names
+        plant_name, disease_name = self._parse_class_name(
+            class_name
+        )
 
-        # Step 8: Check if healthy
         is_healthy = 'healthy' in class_name.lower()
 
         return {
@@ -203,21 +145,15 @@ class PlantDiseasePredictor:
 
     def _parse_class_name(self, class_name):
         """
-        Parse class name into plant and disease parts.
-        
-        Examples:
-        'Tomato_Early_blight'     → ('Tomato', 'Early Blight')
-        'Tomato__Tomato_mosaic_virus' → ('Tomato', 'Mosaic Virus')
-        'Pepper__bell___healthy'  → ('Pepper Bell', 'Healthy')
-        'Potato__healthy'         → ('Potato', 'Healthy')
+        Parse class name into plant and disease.
+        e.g. 'Tomato_Early_blight' → ('Tomato','Early Blight')
         """
-        # Clean up the name
-        name = class_name.replace('___', '__').replace('__', '_')
+        name  = class_name.replace('___','_').replace('__','_')
         parts = name.split('_')
 
         if len(parts) >= 2:
             plant   = parts[0].capitalize()
-            disease = ' '.join(parts[1:]).replace('_', ' ').title()
+            disease = ' '.join(parts[1:]).title()
         else:
             plant   = class_name
             disease = 'Unknown'
@@ -225,78 +161,61 @@ class PlantDiseasePredictor:
         return plant, disease
 
 
-# ============================================
-# STANDALONE TESTING
-# Run: python ml/predict.py
-# ============================================
-def test_predictor():
-    """Test the predictor with a sample image from dataset"""
+# ── Singleton instance ───────────────────────
+_predictor_instance = None
 
-    print("\n" + "="*55)
+def get_predictor():
+    """Get or create singleton predictor"""
+    global _predictor_instance
+    if _predictor_instance is None:
+        _predictor_instance = PlantDiseasePredictor()
+    return _predictor_instance
+
+
+# ── Standalone test ───────────────────────────
+if __name__ == "__main__":
+    print("\n" + "="*50)
     print("  PREDICTION PIPELINE TEST")
-    print("="*55)
+    print("="*50)
 
-    # Initialize predictor
-    predictor = PlantDiseasePredictor()
-
-    # Find a test image from dataset
+    predictor    = PlantDiseasePredictor()
     DATASET_PATH = "dataset/PlantVillage"
     test_image   = None
     test_class   = None
 
-    # Pick first image from first class folder
-    for class_folder in sorted(os.listdir(DATASET_PATH)):
-        class_path = os.path.join(DATASET_PATH, class_folder)
-        if os.path.isdir(class_path):
-            images = [
-                f for f in os.listdir(class_path)
-                if f.lower().endswith(('.jpg', '.jpeg', '.png'))
+    for cls in sorted(os.listdir(DATASET_PATH)):
+        cls_path = os.path.join(DATASET_PATH, cls)
+        if os.path.isdir(cls_path):
+            imgs = [
+                f for f in os.listdir(cls_path)
+                if f.lower().endswith(('.jpg','.jpeg','.png'))
             ]
-            if images:
-                test_image = os.path.join(class_path, images[0])
-                test_class = class_folder
+            if imgs:
+                test_image = os.path.join(cls_path, imgs[0])
+                test_class = cls
                 break
 
     if not test_image:
-        print("❌ No test image found in dataset!")
-        return
-
-    print(f"\n🖼️  Test image:    {test_image}")
-    print(f"📋 True class:    {test_class}")
-
-    # Run prediction
-    print("\n⏳ Running prediction...")
-    result = predictor.predict(test_image)
-
-    # Display results
-    print("\n" + "="*55)
-    print("  PREDICTION RESULTS")
-    print("="*55)
-    print(f"\n🌿 Plant:         {result['plant_name']}")
-    print(f"🦠 Disease:       {result['disease_name']}")
-    print(f"📊 Confidence:    {result['confidence']}%")
-    print(f"✅ Is Healthy:    {result['is_healthy']}")
-    print(f"🏷️  Class Name:    {result['class_name']}")
-
-    print(f"\n📊 TOP 3 PREDICTIONS:")
-    print("-"*45)
-    for i, pred in enumerate(result['top3'], 1):
-        bar_len = int(pred['confidence'] / 2)
-        bar     = "█" * bar_len
-        print(f"  {i}. {pred['class']:<40}")
-        print(f"     {bar} {pred['confidence']}%")
-
-    # Check if prediction matches true class
-    print("\n" + "="*55)
-    if result['class_name'] == test_class:
-        print("✅ CORRECT PREDICTION!")
+        print("❌ No test image found!")
     else:
-        print(f"⚠️  Predicted: {result['class_name']}")
-        print(f"   Actual:    {test_class}")
-    print("="*55)
+        print(f"\n🖼️  Image: {test_image}")
+        print(f"📋 True:  {test_class}")
+        print("\n⏳ Predicting...")
 
-    return result
+        result = predictor.predict(test_image)
 
+        print("\n" + "="*50)
+        print("  RESULTS")
+        print("="*50)
+        print(f"🌿 Plant:      {result['plant_name']}")
+        print(f"🦠 Disease:    {result['disease_name']}")
+        print(f"📊 Confidence: {result['confidence']}%")
+        print(f"✅ Healthy:    {result['is_healthy']}")
+        print(f"\n📊 Top 3:")
+        for i, p in enumerate(result['top3'], 1):
+            bar = '█' * int(p['confidence'] / 2)
+            print(f"  {i}. {p['class']}")
+            print(f"     {bar} {p['confidence']}%")
 
-if __name__ == "__main__":
-    test_predictor()
+        correct = result['class_name'] == test_class
+        print(f"\n{'✅ CORRECT!' if correct else '⚠️ Different from true label'}")
