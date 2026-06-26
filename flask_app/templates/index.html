@@ -9,12 +9,15 @@
   <h1>Plant Disease Detector</h1>
   <p>Upload a leaf photo and our AI instantly identifies diseases,
      suggests treatments, and predicts recovery chances.</p>
-  <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
-    <a href="{{ url_for('main.upload') }}" class="btn btn-white">
+  <div style="display:flex; gap:1rem;
+              justify-content:center; flex-wrap:wrap;">
+    <a href="/upload" class="btn btn-white">
       📤 Analyze a Leaf
     </a>
-    <a href="{{ url_for('main.history') }}" class="btn btn-primary"
-       style="background:rgba(255,255,255,0.2); border:2px solid white;">
+    <a href="/history"
+       class="btn btn-primary"
+       style="background:rgba(255,255,255,0.2);
+              border:2px solid white;">
       📋 View History
     </a>
   </div>
@@ -51,69 +54,154 @@
   <div class="feature-card">
     <span class="feature-icon">🤖</span>
     <h3>AI-Powered Detection</h3>
-    <p>97%+ accuracy using MobileNetV2 deep learning trained on thousands of plant images.</p>
+    <p>97%+ accuracy using MobileNetV2 deep learning
+       trained on thousands of plant images.</p>
   </div>
   <div class="feature-card">
     <span class="feature-icon">⚡</span>
     <h3>Instant Results</h3>
-    <p>Get disease identification, cause, and treatment plan in under 3 seconds.</p>
+    <p>Get disease identification, cause, and
+       treatment plan in under 3 seconds.</p>
   </div>
   <div class="feature-card">
     <span class="feature-icon">💊</span>
     <h3>Treatment Plans</h3>
-    <p>Detailed treatment steps, prevention tips, and recovery probability for every disease.</p>
+    <p>Detailed treatment steps, prevention tips,
+       and recovery probability for every disease.</p>
   </div>
   <div class="feature-card">
     <span class="feature-icon">📊</span>
     <h3>Prediction History</h3>
-    <p>All your past analyses saved automatically. Review and track your plants over time.</p>
+    <p>All your past analyses saved automatically.
+       Review and track your plants over time.</p>
   </div>
   <div class="feature-card">
     <span class="feature-icon">🌿</span>
     <h3>15 Disease Classes</h3>
-    <p>Covers Tomato, Potato, and Pepper diseases including Early Blight, Late Blight, and more.</p>
+    <p>Covers Tomato, Potato, and Pepper diseases
+       including Early Blight, Late Blight, and more.</p>
   </div>
   <div class="feature-card">
     <span class="feature-icon">📱</span>
     <h3>Easy to Use</h3>
-    <p>Simply upload a photo of your plant leaf — no technical knowledge required.</p>
+    <p>Simply upload a photo of your plant leaf —
+       no technical knowledge required.</p>
   </div>
 </div>
 
 <!-- HOW IT WORKS -->
-<div style="background:white; padding:3rem 2rem; margin-top:2rem;">
+<div style="background:white; padding:3rem 2rem;
+            margin-top:2rem;">
   <div class="container">
-    <h2 style="text-align:center; color:var(--primary-dark);
-               font-size:2rem; margin-bottom:2.5rem;">
+    <h2 style="text-align:center;
+               color:var(--primary-dark);
+               font-size:2rem;
+               margin-bottom:2.5rem;">
       How It Works
     </h2>
-    <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+
+    <div style="display:grid;
+                grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
                 gap:2rem; text-align:center;">
-      {% for step in [
-        ('1', '📸', 'Upload Photo', 'Take or upload a clear photo of the affected leaf'),
-        ('2', '🤖', 'AI Analysis', 'Our model analyzes patterns, colors and textures'),
-        ('3', '🔍', 'Get Results', 'Receive disease name with confidence percentage'),
-        ('4', '💊', 'Take Action', 'Follow the treatment plan and prevention tips')
-      ] %}
+
       <div>
-        <div style="width:60px; height:60px; background:var(--primary);
-                    border-radius:50%; display:flex; align-items:center;
-                    justify-content:center; margin:0 auto 1rem;
-                    font-size:1.5rem; font-weight:800; color:white;">
-          {{ step[0] }}
-        </div>
-        <div style="font-size:2rem; margin-bottom:0.5rem;">{{ step[1] }}</div>
-        <h4 style="color:var(--primary-dark); margin-bottom:0.4rem;">{{ step[2] }}</h4>
-        <p style="color:#666; font-size:0.9rem;">{{ step[3] }}</p>
+        <div style="width:60px; height:60px;
+                    background:var(--primary);
+                    border-radius:50%;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    margin:0 auto 1rem;
+                    font-size:1.5rem;
+                    font-weight:800;
+                    color:white;">1</div>
+        <div style="font-size:2rem;
+                    margin-bottom:0.5rem;">📸</div>
+        <h4 style="color:var(--primary-dark);
+                   margin-bottom:0.4rem;">
+          Upload Photo
+        </h4>
+        <p style="color:#666; font-size:0.9rem;">
+          Take or upload a clear photo of the affected leaf
+        </p>
       </div>
-      {% endfor %}
+
+      <div>
+        <div style="width:60px; height:60px;
+                    background:var(--primary);
+                    border-radius:50%;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    margin:0 auto 1rem;
+                    font-size:1.5rem;
+                    font-weight:800;
+                    color:white;">2</div>
+        <div style="font-size:2rem;
+                    margin-bottom:0.5rem;">🤖</div>
+        <h4 style="color:var(--primary-dark);
+                   margin-bottom:0.4rem;">
+          AI Analysis
+        </h4>
+        <p style="color:#666; font-size:0.9rem;">
+          Our model analyzes patterns, colors and textures
+        </p>
+      </div>
+
+      <div>
+        <div style="width:60px; height:60px;
+                    background:var(--primary);
+                    border-radius:50%;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    margin:0 auto 1rem;
+                    font-size:1.5rem;
+                    font-weight:800;
+                    color:white;">3</div>
+        <div style="font-size:2rem;
+                    margin-bottom:0.5rem;">🔍</div>
+        <h4 style="color:var(--primary-dark);
+                   margin-bottom:0.4rem;">
+          Get Results
+        </h4>
+        <p style="color:#666; font-size:0.9rem;">
+          Receive disease name with confidence percentage
+        </p>
+      </div>
+
+      <div>
+        <div style="width:60px; height:60px;
+                    background:var(--primary);
+                    border-radius:50%;
+                    display:flex;
+                    align-items:center;
+                    justify-content:center;
+                    margin:0 auto 1rem;
+                    font-size:1.5rem;
+                    font-weight:800;
+                    color:white;">4</div>
+        <div style="font-size:2rem;
+                    margin-bottom:0.5rem;">💊</div>
+        <h4 style="color:var(--primary-dark);
+                   margin-bottom:0.4rem;">
+          Take Action
+        </h4>
+        <p style="color:#666; font-size:0.9rem;">
+          Follow the treatment plan and prevention tips
+        </p>
+      </div>
+
     </div>
 
     <div style="text-align:center; margin-top:3rem;">
-      <a href="{{ url_for('main.upload') }}" class="btn btn-primary" style="font-size:1.1rem; padding:1rem 2.5rem;">
+      <a href="/upload"
+         class="btn btn-primary"
+         style="font-size:1.1rem; padding:1rem 2.5rem;">
         🌿 Start Analyzing Now
       </a>
     </div>
+
   </div>
 </div>
 
